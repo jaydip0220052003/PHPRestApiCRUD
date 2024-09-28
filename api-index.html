@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API-INDEX</title>
+    <style>
+        #modal {
+            background: rgba(0, 0, 0, 0.7);
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            display: none;
+        }
+
+        #modalFrom {
+            background: #fff;
+            width: 80%;
+            max-width: 400px;
+            top: 20%;
+            position: relative;
+            left: calc(30% - 15%);
+            padding: 15px;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        #modalFrom h2 {
+            margin: 0 0 15 px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid black;
+        }
+
+        #closebtn {
+            background-color: red;
+            color: white;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            border-radius: 50%;
+            position: absolute;
+            left: calc(80% - 12%);
+            top: calc(33% - 15%);
+            /* top:  - 15px; */
+            right: calc(50% - 15%);
+            /* right: - 15px; */
+            cursor: pointer;
+        }
+
+        .deletebtn {
+            background-color: red;
+            color: white;
+            border: 0;
+            padding: 4px 10px;
+            border-radius: 3px;
+        }
+
+        .editbtn {
+            background-color: aqua;
+            color: black;
+            border: 0;
+            padding: 4px 10px;
+            border-radius: 3px;
+        }
+
+        #pagination {
+            font-family: 'Arial', sans-serif;
+            /* Specify the font here */
+            text-align: center;
+        }
+
+        #pagination a {
+            text-decoration: none;
+            padding: 8px 16px;
+            color: black;
+            background-color: #f2f2f2;
+            border: 1px solid #ddd;
+            margin: 0 4px;
+        }
+
+        #pagination a.active {
+            background-color: #4CAF50;
+            color: white;
+            border: 1px solid #4CAF50;
+        }
+
+        /* Error Message Styling */
+        #error-msg {
+            background-color: #f8d7da;
+            /* Light red background */
+            color: #721c24;
+            /* Dark red text */
+            border: 1px solid #f5c6cb;
+            /* Light red border */
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            display: none;
+        }
+
+        /* Success Message Styling */
+        #success-msg {
+            background-color: #d4edda;
+            /* Light green background */
+            color: #155724;
+            /* Dark green text */
+            border: 1px solid #c3e6cb;
+            /* Light green border */
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
+    <script src="../REST Api/jquery-3.7.1.js">
+    </script>
+</head>
+
+<body>
+    <div id="searchbar">
+        <label for="">Search</label>
+        <input type="text"  id="search" autocomplete="off">
+    </div>
+    <div id="error-msg" class="message"></div>
+    <div id="success-msg" class="message"></div>
+    <!-- <input type="button" value="Show data" id="loaddata"> -->
+    <br><br>
+    <form id="addForm">
+        First Name<input type="text" name="first_name" id="first_name">
+        <br><br>
+        lastName <input type="text" name="last_name" id="last_name">
+        <br><br>
+        Email : <input type="email" name="email" id="email">
+        <br><br>
+        Gender <input type="text" name="gender" id="gender">
+        <br><br>
+        <input type="submit" value="Submit" id="savebutton2">
+        <br><br>
+    </form>
+    <table id="tableload" width="100%" border="1" cellpadding="10px">
+        <tr>
+            <th>ID</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Email</th>
+            <th>Gender</th>
+            <th>Action</th>
+        </tr>
+        <tbody id="load-table">
+        </tbody>
+    </table>
+    </div>
+    <div id="modal">
+        <div id="modalFrom">
+            <h2>Edit From</h2>
+            <form action="" id="editForm">
+                <input type="hidden" name="id" id="editid">
+                First Name<input type="text" name="first_name" id="firstname">
+                <br><br>
+                lastName <input type="text" name="last_name" id="lastname">
+                <br><br>
+                Email : <input type="email" name="email" id="uemail">
+                <br><br>
+                Gender <input type="text" id="genders" name="gender">
+                <!-- Male<input type="radio" name="gender" value="male" id="genders">
+            Female<input type="radio" name="gender" value="female" id="genders"> -->
+                <br><br>
+                <input type="submit" value="Submit" id="savebutton">
+            </form>
+        </div>
+        <div id="closebtn">X</div>
+    </div>
+    <script>
+        $(document).ready(function () {
+            function loadTable() {
+                // $('#tableload').html("");
+                $.ajax({
+                    url: "http://localhost:3000/REST%20Api/api-featchall.php",
+                    type: "GET",
+                    // dataType:"JSON",
+                    success: function (data) {
+                        // console.log(data);
+                        if (data.status == false) {
+                            $("#load-table").append("<tr><td colsapn='6'><h2>" + data.message + "</h2></td></tr>")
+                        } else {
+                            $.each(data, function (key, value) {
+                                $("#load-table").append("<tr>"
+                                    + "<td>" + value.id + "</td>" +
+                                    "<td>" + value.first_name + "</td>" +
+                                    "<td>" + value.last_name + "</td>" +
+                                    "<td>" + value.email + "</td>" +
+                                    "<td>" + value.gender + "</td>" +
+                                    "<td><button class='editbtn' data-eid='" + value.id + "'>Edit</button><button class='deletebtn' data-id='" + value.id + "'>Delete</button></td>" +
+                                    +"<td>")
+                                    });
+                                }
+                            }
+                        });
+                    }
+                    loadTable();
+            //messgae
+            function message(message, status) {
+                if (status == true) {
+                    $('#success-msg').html(message).slideDown();
+                    $('#error-msg').slideUp();
+                    setTimeout(function () {
+                        $('#success-msg').slideUp();
+                    }, 3000);
+                } else if (status == false) {
+                    $('#error-msg').html(message).slideDown();
+                    $('#success-msg').slideUp();
+                    setTimeout(function () {
+                        $('#error-msg').slideUp();
+                    }, 3000);
+                }
+            }
+            //function for data to json obj
+            function jsonData(targetForm) {
+                var arr = $(targetForm).serializeArray();
+                var obj = {};
+                for (var a = 0; a < arr.length; a++) {
+                    if (arr[a].value == "") {
+                        return false;
+                    }
+                    obj[arr[a].name] = arr[a].value;
+                }
+                var json_string = JSON.stringify(obj);
+                return json_string;
+            }
+
+            //insert data
+            $('#savebutton2').on("click", function (e) {
+                e.preventDefault();
+                var jsonobj = jsonData('#addForm');
+                if (jsonobj == false) {
+                    message("All Fields Are Requried", false);
+                } else {
+                    $.ajax({
+                        url: "http://localhost:3000/REST%20Api/api-insert.php",
+                        type: "POST",
+                        data: jsonobj,
+                        success: function (data) {
+                            message(data.message, data.status);
+                            if (data.status == true) {
+                                loadTable();
+                                $('#addForm').trigger("reset");
+                            }
+                        }
+                    });
+                }
+            });
+
+            //featch one record
+            $(document).on("click", ".editbtn", function () {
+                $("#modal").show();
+                var uid = $(this).data("eid");
+                var obj = { id: uid }
+                var myJSON = JSON.stringify(obj);
+                // console.log(myJSON);
+                $.ajax({
+                    url: "http://localhost:3000/REST%20Api/api-featchone.php",
+                    type: "POST",
+                    data: myJSON,
+                    success: function (data) {
+                        // console.log(data);
+                        $('#editid').val(data[0].id);
+                        $('#firstname').val(data[0].first_name);
+                        $('#lastname').val(data[0].last_name);
+                        $('#uemail').val(data[0].email);
+                        $('#genders').val(data[0].gender);
+                    }
+                });
+            });
+            //update Record
+            $('#savebutton').on("click", function (e) {
+                e.preventDefault();
+                var jsonobj = jsonData('#editForm');
+                if (jsonobj == false) {
+                    message("All Fields Are Requried", false);
+                } else {
+                    $.ajax({
+                        url: "http://localhost:3000/REST%20Api/api-update.php",
+                        type: "POST",
+                        data: jsonobj,
+                        success: function (data) {
+                            message(data.message, data.status);
+                            if (data.status == true) {
+                                $('#modal').hide();
+                                loadTable();
+                            }
+                        }
+                    });
+                }
+            });
+            $(document).on("click", ".deletebtn", function () {
+                if (confirm("Do You Really Want To Delete this record")) {
+                    var uid = $(this).data("id");
+                    var obj = { id: uid }
+                    var myJSON = JSON.stringify(obj);
+                    var row = this;
+                    $.ajax({
+                        url: "http://localhost:3000/REST%20Api/api-delete.php",
+                        type: "POST",
+                        data: myJSON,
+                        success: function (data) {
+                            message(data.message, data.status);
+                            if (data.status == true) {
+                                $(row).closest("tr").fadeOut();
+                            }
+                        }
+                    });
+                }
+            });
+            // live search record
+            $("#search").on("keyup", function () {
+                var search_term = $(this).val();
+            //    $('#tableload').html('');
+            $("#load-table").html("");
+                $.ajax({
+                    url: 'http://localhost:3000/REST%20Api/api-search.php?search='+search_term,
+                    type: "GET",
+                    success: function (data) {
+                        message(data.message, data.status);
+                        if (data.status == false) {
+                            $("#load-table").append("<tr><td colsapn='6'><h2>" + data.message + "</h2></td></tr>")
+                        } else {
+                            $.each(data, function (key, value) {
+                                $("#load-table").append("<tr>"
+                                    + "<td>" + value.id + "</td>" +
+                                    "<td>" + value.first_name + "</td>" +
+                                    "<td>" + value.last_name + "</td>" +
+                                    "<td>" + value.email + "</td>" +
+                                    "<td>" + value.gender + "</td>" +
+                                    "<td><button class='editbtn' data-eid='" + value.id + "'>Edit</button><button class='deletebtn' data-id='" + value.id + "'>Delete</button></td>" +
+                                    +"<td>");
+                            });
+                        }
+                    }
+                });
+            });
+
+            $("#closebtn").on("click", function () {
+                $("#modal").hide();
+            });
+        });
+    </script>
+</body>
+
+</html>
